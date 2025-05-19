@@ -1,0 +1,70 @@
+﻿@{
+    ViewData["Title"] = "Webhook Simulation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4">Simulador de Webhook </h2>
+
+    <div class="d-grid gap-2 col-6 mx-auto mb-5">
+        <button class="btn btn-success" onclick="sendWebhook('payment_success', 'Pago completado por Javier')">
+            Simular pago exitoso
+        </button>
+        <button class="btn btn-danger" onclick="sendWebhook('payment_failed', 'Fallo al procesar el pago de Sofia')">
+            Simular fallo de pago
+        </button>
+        <button class="btn btn-warning" onclick="sendWebhook('subscription_created', 'Nueva suscripción de usuario Yariel')">
+            Simular nueva suscripción
+        </button>
+    </div>
+
+    <div class="border rounded p-4 bg-light" style="max-height: 400px; overflow-y: auto;">
+        <h5>📋 Eventos recibidos:</h5>
+        <ul id="eventLog" class="list-group mt-3">
+        </ul>
+    </div>
+</div>
+
+<script>
+    async function sendWebhook(eventType, message) {
+        const jsonData = {
+            eventType,
+            message
+        };
+
+        try {
+            const res = await fetch('/api/webhook', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(jsonData)
+            });
+
+            const result = await res.text();
+            addToLog(eventType, message);
+        } catch (err) {
+            addToLog('error', 'Fallo al enviar el webhook');
+        }
+    }
+
+    function addToLog(eventType, message) {
+        const log = document.getElementById("eventLog");
+
+        const now = new Date();
+        const time = now.toLocaleTimeString();
+
+        let icon = "ℹ️";
+        if (eventType === "payment_success") icon = "🧾";
+        else if (eventType === "payment_failed") icon = "❌";
+        else if (eventType === "subscription_created") icon = "📦";
+        else if (eventType === "error") icon = "⚠️";
+
+        const item = document.createElement("li");
+        item.className = "list-group-item d-flex justify-content-between align-items-start";
+        item.innerHTML = `
+            <span>${icon} <strong>[${eventType}]</strong> ${message}</span>
+            <small class="text-muted">${time}</small>
+        `;
+
+        log.prepend(item);
+    }
+</script>
