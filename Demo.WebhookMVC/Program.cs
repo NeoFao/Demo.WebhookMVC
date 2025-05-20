@@ -20,7 +20,7 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-app.MapControllers();   
+app.MapControllers();   //Mapea las rutas de los Controladores
 
 app.MapControllerRoute(
     name: "default",

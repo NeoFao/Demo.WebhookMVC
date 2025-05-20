@@ -26,45 +26,84 @@
 </div>
 
 <script>
-    async function sendWebhook(eventType, message) {
-        const jsonData = {
-            eventType,
-            message
-        };
+    // Se define una constante llamada 'eventIcons'.
+    // Este es un objeto literal de JavaScript que actúa como diccionario o mapa clave-valor.
+    // Su propósito es asociar un tipo de evento con un ícono representativo.
+    const eventIcons = {
+        payment_success: "🧾",              // Ícono para evento de pago exitoso
+        payment_failed: "❌",               // Ícono para evento de pago fallido
+        subscription_created: "📦",         // Ícono para evento de suscripción nueva
+        error: "⚠️",                        // Ícono para errores
+        default: "ℹ️"                       // Ícono por defecto cuando el tipo no es reconocido
+    };
+
+    // Función asincrónica que envía datos como un "webhook" al servidor.
+    // 'async' indica que la función puede usar 'await' para esperar operaciones asincrónicas.
+    // Recibe tres parámetros: tipo de evento, mensaje, y una URL (por defecto apunta a '/api/webhook').
+    async function sendWebhook(eventType, message, url = '/api/webhook') {
+        // Se crea un objeto con los datos del evento para ser enviados al servidor.
+        const jsonData = { eventType, message };
 
         try {
-            const res = await fetch('/api/webhook', {
+            // Se utiliza fetch, una función integrada de JavaScript para hacer solicitudes HTTP.
+            // Aquí se hace una solicitud POST con encabezado de tipo JSON y el cuerpo en formato JSON.
+            const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(jsonData)
+                body: JSON.stringify(jsonData) // Convierte el objeto a una cadena JSON.
             });
 
+            // Se obtiene el texto de la respuesta (aunque no se utiliza en el código).
             const result = await res.text();
+
+            // Se registra en el log que el webhook fue enviado exitosamente.
             addToLog(eventType, message);
         } catch (err) {
+            // Si ocurre un error al enviar, se registra un mensaje de error en el log.
             addToLog('error', 'Fallo al enviar el webhook');
         }
     }
 
+    // Función que agrega un nuevo elemento visual al registro de eventos en pantalla.
+    // Toma como parámetros el tipo de evento y el mensaje.
     function addToLog(eventType, message) {
+        // Obtiene el elemento HTML con id 'eventLog', donde se muestran los eventos.
         const log = document.getElementById("eventLog");
 
+        // Crea un nuevo elemento <li> con los datos del evento.
+        const logItem = createLogItem(eventType, message);
+
+        // Inserta el nuevo elemento al principio del registro.
+        log.prepend(logItem);
+    }
+
+    // Función que construye un elemento HTML tipo <li> para mostrar un evento en el log.
+    function createLogItem(eventType, message) {
+        // Se obtiene la hora actual como objeto Date.
         const now = new Date();
+
+        // Se convierte la hora a un formato legible como string (hora:minuto:segundo).
         const time = now.toLocaleTimeString();
 
-        let icon = "ℹ️";
-        if (eventType === "payment_success") icon = "🧾";
-        else if (eventType === "payment_failed") icon = "❌";
-        else if (eventType === "subscription_created") icon = "📦";
-        else if (eventType === "error") icon = "⚠️";
+        // Se selecciona el ícono según el tipo de evento; si no existe, se usa el ícono por defecto.
+        const icon = eventIcons[eventType] || eventIcons.default;
 
+        // Se crea dinámicamente un nuevo elemento HTML <li>.
         const item = document.createElement("li");
+
+        // Se asignan clases al <li> para estilizarlo (utilizando Bootstrap en este caso).
         item.className = "list-group-item d-flex justify-content-between align-items-start";
+
+        // Se define el contenido HTML interno del elemento, usando plantilla de cadena (template literal).
         item.innerHTML = `
             <span>${icon} <strong>[${eventType}]</strong> ${message}</span>
             <small class="text-muted">${time}</small>
         `;
 
-        log.prepend(item);
+        // Se devuelve el elemento listo para ser insertado en el DOM.
+        return item;
     }
 </script>
+
+
+
